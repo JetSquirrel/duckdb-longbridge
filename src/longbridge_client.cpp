@@ -73,7 +73,7 @@ static std::string HmacSha256Hex(const std::string &key, const std::string &mess
 // Returns the value of a (global) extension option, or an empty string when unset/empty.
 static std::string GetOptionValue(DatabaseInstance &db, const std::string &name) {
 	Value value;
-#ifdef LONGBRIDGE_HAS_IDENTIFIER
+#ifdef LONGBRIDGE_DUCKDB_V2
 	const Identifier setting(name);
 #else
 	const std::string &setting = name;

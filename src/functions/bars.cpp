@@ -21,7 +21,21 @@
 
 namespace duckdb {
 
-using namespace duckdb_yyjson;
+using duckdb_yyjson::unsafe_yyjson_get_next;
+using duckdb_yyjson::yyjson_arr_get_first;
+using duckdb_yyjson::yyjson_arr_size;
+using duckdb_yyjson::yyjson_doc;
+using duckdb_yyjson::yyjson_doc_free;
+using duckdb_yyjson::yyjson_doc_get_root;
+using duckdb_yyjson::yyjson_get_num;
+using duckdb_yyjson::yyjson_get_sint;
+using duckdb_yyjson::yyjson_get_str;
+using duckdb_yyjson::yyjson_is_arr;
+using duckdb_yyjson::yyjson_is_num;
+using duckdb_yyjson::yyjson_is_obj;
+using duckdb_yyjson::yyjson_is_str;
+using duckdb_yyjson::yyjson_obj_get;
+using duckdb_yyjson::yyjson_val;
 
 namespace {
 
@@ -133,7 +147,7 @@ struct BarsGlobalState : public GlobalTableFunctionState {
 // symbol VARCHAR, timestamp TIMESTAMP, open/high/low/close DOUBLE, volume BIGINT, turnover DOUBLE,
 // trade_session INTEGER.
 unique_ptr<FunctionData> BarsBindCommon(ClientContext &context, const std::string &endpoint,
-                                        std::vector<std::pair<std::string, std::string>> params,
+                                        const std::vector<std::pair<std::string, std::string>> &params,
                                         vector<LogicalType> &return_types, ColumnNames &names) {
 	names = {"symbol", "timestamp", "open", "high", "low", "close", "volume", "turnover", "trade_session"};
 	return_types = {LogicalType::VARCHAR, LogicalType::TIMESTAMP, LogicalType::DOUBLE,
@@ -223,7 +237,7 @@ unique_ptr<FunctionData> BarsBind(ClientContext &context, TableFunctionBindInput
 	                                                           {"period", std::to_string(period)},
 	                                                           {"count", std::to_string(count)},
 	                                                           {"adjust_type", std::to_string(adjust_type)}};
-	return BarsBindCommon(context, "/v1/quote/candlestick", std::move(params), return_types, names);
+	return BarsBindCommon(context, "/v1/quote/candlestick", params, return_types, names);
 }
 
 unique_ptr<FunctionData> HistoryBarsBind(ClientContext &context, TableFunctionBindInput &input,
@@ -248,7 +262,7 @@ unique_ptr<FunctionData> HistoryBarsBind(ClientContext &context, TableFunctionBi
 	                                                           {"query_type", "2"},
 	                                                           {"start_date", FormatDateParam(start_date)},
 	                                                           {"end_date", FormatDateParam(end_date)}};
-	return BarsBindCommon(context, "/v1/quote/history_candlestick", std::move(params), return_types, names);
+	return BarsBindCommon(context, "/v1/quote/history_candlestick", params, return_types, names);
 }
 
 unique_ptr<GlobalTableFunctionState> BarsInitGlobal(ClientContext &context, TableFunctionInitInput &input) {
@@ -262,11 +276,11 @@ void BarsScan(ClientContext &context, TableFunctionInput &input, DataChunk &outp
 	while (state.offset < bind_data.rows.size() && count < STANDARD_VECTOR_SIZE) {
 		const auto &row = bind_data.rows[state.offset++];
 		for (idx_t col = 0; col < row.size(); col++) {
-			output.SetValue(col, count, row[col]);
+			SetOutputValue(output, col, count, row[col]);
 		}
 		count++;
 	}
-	output.SetCardinality(count);
+	FinishOutput(output, count);
 }
 
 } // namespace

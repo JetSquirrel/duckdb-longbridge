@@ -168,7 +168,12 @@ unique_ptr<GlobalTableFunctionState> LongbridgeQuoteInitGlobal(ClientContext &co
 
 		YyjsonDocPtr doc(client.Get("/v1/quote/quote", params));
 		auto root = duckdb_yyjson::yyjson_doc_get_root(doc.get());
-		auto secu_quote = root ? duckdb_yyjson::yyjson_obj_get(root, "secu_quote") : nullptr;
+		// The gateways (demo/sidecar, the Worker) answer {"list": [...]}; LongPort's own
+		// QuoteResponse names the array secu_quote.
+		auto secu_quote = root ? duckdb_yyjson::yyjson_obj_get(root, "list") : nullptr;
+		if (!secu_quote && root) {
+			secu_quote = duckdb_yyjson::yyjson_obj_get(root, "secu_quote");
+		}
 		if (!secu_quote || !duckdb_yyjson::yyjson_is_arr(secu_quote)) {
 			continue;
 		}
@@ -214,20 +219,20 @@ void LongbridgeQuoteFunc(ClientContext &, TableFunctionInput &data, DataChunk &o
 	idx_t count = 0;
 	while (state.offset < state.rows.size() && count < STANDARD_VECTOR_SIZE) {
 		auto &row = state.rows[state.offset];
-		output.SetValue(0, count, row.symbol);
-		output.SetValue(1, count, row.last_done);
-		output.SetValue(2, count, row.prev_close);
-		output.SetValue(3, count, row.open);
-		output.SetValue(4, count, row.high);
-		output.SetValue(5, count, row.low);
-		output.SetValue(6, count, row.timestamp);
-		output.SetValue(7, count, row.volume);
-		output.SetValue(8, count, row.turnover);
-		output.SetValue(9, count, row.trade_status);
+		SetOutputValue(output, 0, count, row.symbol);
+		SetOutputValue(output, 1, count, row.last_done);
+		SetOutputValue(output, 2, count, row.prev_close);
+		SetOutputValue(output, 3, count, row.open);
+		SetOutputValue(output, 4, count, row.high);
+		SetOutputValue(output, 5, count, row.low);
+		SetOutputValue(output, 6, count, row.timestamp);
+		SetOutputValue(output, 7, count, row.volume);
+		SetOutputValue(output, 8, count, row.turnover);
+		SetOutputValue(output, 9, count, row.trade_status);
 		state.offset++;
 		count++;
 	}
-	output.SetCardinality(count);
+	FinishOutput(output, count);
 }
 
 } // namespace

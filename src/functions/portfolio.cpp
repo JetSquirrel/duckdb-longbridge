@@ -13,7 +13,21 @@
 
 namespace duckdb {
 
-using namespace duckdb_yyjson;
+using duckdb_yyjson::unsafe_yyjson_get_next;
+using duckdb_yyjson::yyjson_arr_get_first;
+using duckdb_yyjson::yyjson_arr_size;
+using duckdb_yyjson::yyjson_doc;
+using duckdb_yyjson::yyjson_doc_free;
+using duckdb_yyjson::yyjson_doc_get_root;
+using duckdb_yyjson::yyjson_get_num;
+using duckdb_yyjson::yyjson_get_sint;
+using duckdb_yyjson::yyjson_get_str;
+using duckdb_yyjson::yyjson_is_arr;
+using duckdb_yyjson::yyjson_is_null;
+using duckdb_yyjson::yyjson_is_num;
+using duckdb_yyjson::yyjson_is_str;
+using duckdb_yyjson::yyjson_obj_get;
+using duckdb_yyjson::yyjson_val;
 
 namespace {
 
@@ -110,12 +124,12 @@ void BufferedRowsFunction(ClientContext &context, TableFunctionInput &data_p, Da
 	while (state.offset < bind_data.rows.size() && count < STANDARD_VECTOR_SIZE) {
 		const auto &row = bind_data.rows[state.offset];
 		for (idx_t col = 0; col < row.size(); col++) {
-			output.SetValue(col, count, row[col]);
+			SetOutputValue(output, col, count, row[col]);
 		}
 		state.offset++;
 		count++;
 	}
-	output.SetCardinality(count);
+	FinishOutput(output, count);
 }
 
 unique_ptr<FunctionData> AccountBind(ClientContext &context, TableFunctionBindInput &input,
