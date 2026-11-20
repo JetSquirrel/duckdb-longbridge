@@ -16,7 +16,7 @@ extension:
 
 repo:
   github: JetSquirrel/duckdb-longbridge
-  ref: TODO_COMMIT_SHA
+  ref: da093b4ccdb14ae1806ac6374e15344457761ffc
 
 docs:
   hello_world: |
