@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="760" viewBox="0 0 1240 760" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 z" fill="#37475A"/>
+    </marker>
+    <marker id="arrow-ext" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 z" fill="#879196"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="760" fill="#FFFFFF"/>
+  <text x="40" y="46" font-size="24" font-weight="bold" fill="#16191F">DuckDB Trading Lab — AWS Deployment Architecture</text>
+  <text x="40" y="72" font-size="13" fill="#545B64">SQL on live market data + AI signals, 100% in the browser (DuckDB-WASM) · stateless JSON gateway on Lambda</text>
+
+  <!-- ===================== Browser ===================== -->
+  <rect x="40" y="130" width="240" height="330" rx="10" fill="#F2F4F8" stroke="#9BA7B6" stroke-width="1.5"/>
+  <text x="160" y="158" font-size="15" font-weight="bold" fill="#16191F" text-anchor="middle">User's Browser</text>
+  <rect x="58" y="176" width="204" height="86" rx="6" fill="#FFFFFF" stroke="#FF9900" stroke-width="2"/>
+  <text x="160" y="200" font-size="13" font-weight="bold" fill="#16191F" text-anchor="middle">React SPA + DuckDB-WASM</text>
+  <text x="160" y="220" font-size="11" fill="#545B64" text-anchor="middle">SQL workspace, result grid</text>
+  <text x="160" y="238" font-size="11" fill="#545B64" text-anchor="middle">engine bundles ← jsDelivr CDN</text>
+  <rect x="58" y="276" width="204" height="66" rx="6" fill="#FFF4E5" stroke="#FF9900" stroke-width="1.5"/>
+  <text x="160" y="299" font-size="12" font-weight="bold" fill="#16191F" text-anchor="middle">longbridge extension (.wasm)</text>
+  <text x="160" y="318" font-size="11" fill="#545B64" text-anchor="middle">longbridge_*() table functions</text>
+  <rect x="58" y="356" width="204" height="66" rx="6" fill="#FFF4E5" stroke="#FF9900" stroke-width="1.5"/>
+  <text x="160" y="379" font-size="12" font-weight="bold" fill="#16191F" text-anchor="middle">jev extension (.wasm)</text>
+  <text x="160" y="398" font-size="11" fill="#545B64" text-anchor="middle">jev_ask / jev_choice / jev_usage</text>
+  <text x="160" y="442" font-size="11" fill="#545B64" text-anchor="middle">no server-side database —</text>
+  <text x="160" y="457" font-size="11" fill="#545B64" text-anchor="middle">all queries run client-side</text>
+
+  <!-- ===================== AWS Cloud ===================== -->
+  <rect x="330" y="100" width="590" height="580" rx="14" fill="none" stroke="#00A1C9" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="352" y="130" font-size="15" font-weight="bold" fill="#00A1C9">AWS Cloud</text>
+
+  <!-- Route53 -->
+  <rect x="360" y="150" width="160" height="56" rx="6" fill="#8C4FFF"/>
+  <text x="440" y="174" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Route 53</text>
+  <text x="440" y="193" font-size="11" fill="#E9E3FB" text-anchor="middle">duck-trader.example.com</text>
+
+  <!-- CloudFront -->
+  <rect x="360" y="260" width="200" height="80" rx="6" fill="#8C4FFF"/>
+  <text x="460" y="286" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">CloudFront</text>
+  <text x="460" y="305" font-size="11" fill="#E9E3FB" text-anchor="middle">/*        → Amplify (static)</text>
+  <text x="460" y="322" font-size="11" fill="#E9E3FB" text-anchor="middle">/v1/* /jev/* → API Gateway</text>
+
+  <!-- Amplify -->
+  <rect x="660" y="140" width="230" height="100" rx="6" fill="#FF9900"/>
+  <text x="775" y="166" font-size="13" font-weight="bold" fill="#16191F" text-anchor="middle">Amplify Hosting</text>
+  <text x="775" y="186" font-size="11" fill="#3A2A00" text-anchor="middle">SPA static assets (dist/)</text>
+  <text x="775" y="203" font-size="11" fill="#3A2A00" text-anchor="middle">/v1.5.4/wasm_eh/*.duckdb_extension.wasm</text>
+  <text x="775" y="222" font-size="11" fill="#3A2A00" text-anchor="middle">COOP/COEP headers → threaded engine</text>
+
+  <!-- API Gateway -->
+  <rect x="660" y="300" width="230" height="64" rx="6" fill="#E7157B"/>
+  <text x="775" y="326" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">API Gateway (HTTP API)</text>
+  <text x="775" y="345" font-size="11" fill="#FBD9E8" text-anchor="middle">CORS * · routes /v1/* and /jev/*</text>
+
+  <!-- Lambda -->
+  <rect x="660" y="404" width="230" height="96" rx="6" fill="#FF9900"/>
+  <text x="775" y="430" font-size="13" font-weight="bold" fill="#16191F" text-anchor="middle">Lambda · trading-gateway</text>
+  <text x="775" y="449" font-size="11" fill="#3A2A00" text-anchor="middle">Node.js sidecar (stateless JSON API)</text>
+  <text x="775" y="466" font-size="11" fill="#3A2A00" text-anchor="middle">live LongPort quotes / synthetic demo</text>
+  <text x="775" y="483" font-size="11" fill="#3A2A00" text-anchor="middle">jev proxy / synthetic answers</text>
+
+  <!-- Secrets Manager -->
+  <rect x="360" y="556" width="240" height="64" rx="6" fill="#DD344C"/>
+  <text x="480" y="580" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Secrets Manager</text>
+  <text x="480" y="596" font-size="10.5" fill="#FADCE1" text-anchor="middle">LONGPORT_APP_KEY / SECRET / TOKEN</text>
+  <text x="480" y="610" font-size="10.5" fill="#FADCE1" text-anchor="middle">TYPESAFE_API_KEY</text>
+
+  <!-- CloudWatch -->
+  <rect x="660" y="556" width="230" height="64" rx="6" fill="#E7157B"/>
+  <text x="775" y="582" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">CloudWatch</text>
+  <text x="775" y="601" font-size="11" fill="#FBD9E8" text-anchor="middle">Lambda logs · API access logs</text>
+
+  <!-- ===================== External services ===================== -->
+  <rect x="980" y="130" width="220" height="64" rx="6" fill="#FFFFFF" stroke="#879196" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="1090" y="156" font-size="12.5" font-weight="bold" fill="#37475A" text-anchor="middle">jsDelivr CDN</text>
+  <text x="1090" y="175" font-size="11" fill="#545B64" text-anchor="middle">@duckdb/duckdb-wasm engine</text>
+
+  <rect x="980" y="300" width="220" height="80" rx="6" fill="#FFFFFF" stroke="#879196" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="1090" y="326" font-size="12.5" font-weight="bold" fill="#37475A" text-anchor="middle">LongPort OpenAPI</text>
+  <text x="1090" y="345" font-size="11" fill="#545B64" text-anchor="middle">wss quote socket (protobuf)</text>
+  <text x="1090" y="362" font-size="11" fill="#545B64" text-anchor="middle">openapi.longbridge.com (REST)</text>
+
+  <rect x="980" y="420" width="220" height="64" rx="6" fill="#FFFFFF" stroke="#879196" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="1090" y="446" font-size="12.5" font-weight="bold" fill="#37475A" text-anchor="middle">TypeSafe Jev API</text>
+  <text x="1090" y="465" font-size="11" fill="#545B64" text-anchor="middle">api.typesafe.ai /v1/systemone</text>
+
+  <text x="1090" y="530" font-size="11" fill="#879196" text-anchor="middle">external (outside AWS)</text>
+
+  <!-- ===================== Arrows ===================== -->
+  <!-- 1 browser -> cloudfront -->
+  <line x1="280" y1="230" x2="356" y2="285" stroke="#37475A" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="300" y="240" font-size="11" fill="#16191F" font-weight="bold">1</text>
+  <text x="252" y="226" font-size="10" fill="#545B64">HTTPS</text>
+
+  <!-- 2 cloudfront -> amplify -->
+  <line x1="560" y1="285" x2="656" y2="205" stroke="#37475A" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="596" y="232" font-size="11" fill="#16191F" font-weight="bold">2</text>
+
+  <!-- 3 cloudfront -> api gw -->
+  <line x1="560" y1="315" x2="656" y2="330" stroke="#37475A" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="596" y="312" font-size="11" fill="#16191F" font-weight="bold">3</text>
+
+  <!-- 4 api gw -> lambda -->
+  <line x1="775" y1="364" x2="775" y2="400" stroke="#37475A" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="785" y="386" font-size="11" fill="#16191F" font-weight="bold">4</text>
+
+  <!-- 5 lambda -> secrets -->
+  <line x1="660" y1="470" x2="560" y2="552" stroke="#37475A" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="588" y="506" font-size="11" fill="#16191F" font-weight="bold">5</text>
+
+  <!-- 6 lambda -> longport -->
+  <line x1="890" y1="430" x2="976" y2="356" stroke="#879196" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrow-ext)"/>
+  <text x="920" y="382" font-size="11" fill="#37475A" font-weight="bold">6</text>
+
+  <!-- 7 lambda -> typesafe -->
+  <line x1="890" y1="452" x2="976" y2="452" stroke="#879196" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrow-ext)"/>
+  <text x="926" y="442" font-size="11" fill="#37475A" font-weight="bold">7</text>
+
+  <!-- 8 browser -> jsdelivr (routed above the AWS boundary) -->
+  <polyline points="120,130 120,92 1090,92 1090,126" fill="none" stroke="#879196" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow-ext)"/>
+  <text x="600" y="86" font-size="11" fill="#37475A" font-weight="bold">8</text>
+
+  <!-- route53 -> cloudfront -->
+  <line x1="440" y1="206" x2="450" y2="256" stroke="#37475A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- lambda -> cloudwatch -->
+  <line x1="775" y1="500" x2="775" y2="552" stroke="#37475A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- wasm extension files: amplify -> browser (dashed return, routed above) -->
+  <polyline points="700,140 700,108 240,108 240,126" fill="none" stroke="#879196" stroke-width="1.5" stroke-dasharray="2 4" marker-end="url(#arrow-ext)"/>
+
+  <!-- ===================== Legend ===================== -->
+  <rect x="40" y="500" width="240" height="180" rx="8" fill="#F2F4F8" stroke="#D5DBDB"/>
+  <text x="56" y="526" font-size="12.5" font-weight="bold" fill="#16191F">Request flows</text>
+  <text x="56" y="550" font-size="11" fill="#37475A">1  GET / SPA + static assets</text>
+  <text x="56" y="570" font-size="11" fill="#37475A">2  /* → Amplify</text>
+  <text x="56" y="590" font-size="11" fill="#37475A">3  /v1/* · /jev/* → API Gateway</text>
+  <text x="56" y="610" font-size="11" fill="#37475A">4  invoke Lambda (JSON)</text>
+  <text x="56" y="630" font-size="11" fill="#37475A">5  read API credentials</text>
+  <text x="56" y="650" font-size="11" fill="#37475A">6  live HK/US quotes (WSS/REST)</text>
+  <text x="56" y="670" font-size="11" fill="#37475A">7/8  Jev AI answers · engine bundles</text>
+</svg>

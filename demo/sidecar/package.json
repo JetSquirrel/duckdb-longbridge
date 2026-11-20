@@ -1,0 +1,16 @@
+{
+  "name": "duckdb-trading-lab-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local sidecar gateway: LongPort quotes, /v1/asset proxy and Jev AI proxy for the DuckDB trading demo",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "longport": "^4.3.7"
+  }
+}

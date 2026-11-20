@@ -1,0 +1,37 @@
+# name: test/sql/longbridge_base_url.test
+# description: test the longbridge_base_url extension option (sidecar mode)
+# group: [sql]
+
+require longbridge
+
+# The option is registered by the extension
+statement ok
+SET longbridge_base_url = 'http://localhost:1';
+
+statement ok
+RESET longbridge_base_url;
+
+# Without a base URL override, missing credentials are rejected at bind time
+statement error
+SELECT * FROM longbridge_bars('700.HK', 'day', 5);
+----
+Longbridge credentials are not configured
+
+# With a base URL override, credentials become optional: the client goes ahead and
+# performs the (unsigned) request, which fails to connect to the unreachable host.
+# The error message must contain the full URL for debuggability.
+statement ok
+SET longbridge_base_url = 'http://localhost:1';
+
+statement error
+SELECT * FROM longbridge_bars('700.HK', 'day', 5);
+----
+localhost:1
+
+statement error
+SELECT * FROM longbridge_quote('700.HK');
+----
+localhost:1
+
+statement ok
+RESET longbridge_base_url;

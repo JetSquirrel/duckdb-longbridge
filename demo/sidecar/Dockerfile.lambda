@@ -1,0 +1,28 @@
+# Container image for the AWS Lambda gateway.
+#
+# Why not the managed nodejs22.x runtime? The longport SDK is a napi native
+# module whose prebuilt linux-gnu binaries require glibc 2.39, while the
+# managed runtime (Amazon Linux 2023) ships glibc 2.34. So we run the plain
+# Node sidecar (server.js) on a Debian trixie base (glibc 2.41) behind the
+# Lambda Web Adapter, which bridges the Lambda Runtime API <-> HTTP on :8080.
+#
+# Build (on Apple Silicon this is a native arm64 build):
+#   docker build --platform linux/arm64 -f Dockerfile.lambda -t duck-trader-gateway .
+#
+# Context: demo/sidecar (needs lambda-pkg/node_modules — the linux-arm64-gnu
+# napi binary, stripped; see README or docs/aws/article.md).
+
+FROM public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 AS adapter
+
+FROM node:22-trixie-slim
+COPY --from=adapter /lambda-adapter /opt/extensions/lambda-adapter
+
+ENV PORT=8080
+WORKDIR /app
+
+COPY package.lambda.json ./package.json
+COPY server.js handler.js ./
+COPY lib ./lib
+COPY lambda-pkg/node_modules ./node_modules
+
+CMD ["node", "server.js"]

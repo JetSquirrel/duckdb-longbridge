@@ -1,0 +1,99 @@
+# name: test/sql/longbridge_bars.test
+# description: test longbridge candlestick (K-line) table functions
+# group: [sql]
+
+require longbridge
+
+# Invalid period strings are rejected at bind time
+statement error
+SELECT * FROM longbridge_bars('700.HK', 'fortnight');
+----
+invalid period
+
+statement error
+SELECT * FROM longbridge_history_bars('700.HK', 'FORTNIGHT', DATE '2023-01-01', DATE '2023-02-01');
+----
+invalid period
+
+# Invalid adjust_type is rejected at bind time
+statement error
+SELECT * FROM longbridge_bars('700.HK', 'day', 100, 'backward');
+----
+invalid adjust_type
+
+statement error
+SELECT * FROM longbridge_history_bars('700.HK', 'day', DATE '2023-01-01', DATE '2023-02-01', 'backward');
+----
+invalid adjust_type
+
+# count must be in [1, 1000]
+statement error
+SELECT * FROM longbridge_bars('700.HK', 'day', 0);
+----
+count must be between 1 and 1000
+
+statement error
+SELECT * FROM longbridge_bars('700.HK', 'day', 1001);
+----
+count must be between 1 and 1000
+
+# start_date must not be after end_date
+statement error
+SELECT * FROM longbridge_history_bars('700.HK', 'day', DATE '2023-02-01', DATE '2023-01-01');
+----
+must not be after end_date
+
+# Live assertions below require credentials; only shape is asserted, never exact market values.
+# NOTE: as of writing, the live gateway returns 404 "api not found" for
+# /v1/quote/candlestick and /v1/quote/history_candlestick (quote pull moved to the
+# WebSocket protocol), so these blocks fail even with valid credentials until the
+# functions are switched to a WSS transport.
+require-env LONGBRIDGE_ACCESS_TOKEN
+
+query I
+SELECT CAST(count(*) >= 0 AS INTEGER) FROM longbridge_bars('700.HK', 'day', 5);
+----
+1
+
+query I
+SELECT CAST(count(*) >= 0 AS INTEGER) FROM longbridge_bars('AAPL.US', '60m');
+----
+1
+
+query I
+SELECT CAST(count(*) >= 0 AS INTEGER) FROM longbridge_history_bars('700.HK', 'day', DATE '2023-01-01', DATE '2023-02-01');
+----
+1
+
+query I
+SELECT CAST(count(*) >= 0 AS INTEGER) FROM longbridge_history_bars('700.HK', 'day', DATE '2023-01-01', DATE '2023-02-01', 'forward');
+----
+1
+
+# Column shape of longbridge_bars
+query TT
+SELECT column_name, column_type FROM (DESCRIBE SELECT * FROM longbridge_bars('700.HK', 'day', 5));
+----
+symbol	VARCHAR
+timestamp	TIMESTAMP
+open	DOUBLE
+high	DOUBLE
+low	DOUBLE
+close	DOUBLE
+volume	BIGINT
+turnover	DOUBLE
+trade_session	INTEGER
+
+# Column shape of longbridge_history_bars
+query TT
+SELECT column_name, column_type FROM (DESCRIBE SELECT * FROM longbridge_history_bars('700.HK', 'day', DATE '2023-01-01', DATE '2023-02-01'));
+----
+symbol	VARCHAR
+timestamp	TIMESTAMP
+open	DOUBLE
+high	DOUBLE
+low	DOUBLE
+close	DOUBLE
+volume	BIGINT
+turnover	DOUBLE
+trade_session	INTEGER

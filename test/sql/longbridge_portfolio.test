@@ -1,0 +1,75 @@
+# name: test/sql/longbridge_portfolio.test
+# description: test longbridge portfolio table functions (account balance, stock positions)
+# group: [sql]
+
+require longbridge
+
+# Both functions are registered and take no arguments
+statement error
+SELECT * FROM longbridge_account('USD');
+----
+No function matches the given name and argument types
+
+statement error
+SELECT * FROM longbridge_positions('700.HK');
+----
+No function matches the given name and argument types
+
+# Without credentials the client rejects the call at bind time (before any network I/O)
+statement error
+SELECT * FROM longbridge_account();
+----
+Longbridge credentials are not configured
+
+statement error
+SELECT * FROM longbridge_positions();
+----
+Longbridge credentials are not configured
+
+# Live assertions below require credentials; only shape is asserted, never values
+require-env LONGBRIDGE_ACCESS_TOKEN
+
+query I
+SELECT CAST(count(*) >= 0 AS INTEGER) FROM longbridge_account();
+----
+1
+
+query I
+SELECT CAST(count(*) >= 0 AS INTEGER) FROM longbridge_positions();
+----
+1
+
+# Column shape of longbridge_account
+query TT
+SELECT column_name, column_type FROM (DESCRIBE SELECT * FROM longbridge_account());
+----
+currency	VARCHAR
+total_cash	DOUBLE
+available_cash	DOUBLE
+withdraw_cash	DOUBLE
+frozen_cash	DOUBLE
+settling_cash	DOUBLE
+redemption_cash	DOUBLE
+max_finance_amount	DOUBLE
+remaining_finance_amount	DOUBLE
+risk_level	VARCHAR
+margin_call	DOUBLE
+net_assets	DOUBLE
+init_margin	DOUBLE
+maintenance_margin	DOUBLE
+buy_power	DOUBLE
+market	VARCHAR
+
+# Column shape of longbridge_positions
+query TT
+SELECT column_name, column_type FROM (DESCRIBE SELECT * FROM longbridge_positions());
+----
+symbol	VARCHAR
+symbol_name	VARCHAR
+quantity	BIGINT
+available_quantity	BIGINT
+currency	VARCHAR
+cost_price	DOUBLE
+market	VARCHAR
+init_quantity	BIGINT
+account_channel	VARCHAR

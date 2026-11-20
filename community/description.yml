@@ -1,0 +1,46 @@
+# Draft for duckdb/community-extensions: copy to extensions/longbridge/description.yml
+# there, with repo.ref set to the pushed commit that should be built.
+extension:
+  name: longbridge
+  description: Query Longbridge (LongPort) OpenAPI market data, account balances and positions from SQL
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+    - JetSquirrel
+  # The wasm builds need the emsdk/vcpkg setup in README "Build" and are served
+  # by the demo itself; leave them out of the community build until that is
+  # tried in its CI.
+  excluded_platforms: "wasm_mvp;wasm_eh;wasm_threads"
+
+repo:
+  github: JetSquirrel/duckdb-longbridge
+  ref: TODO_COMMIT_SHA
+
+docs:
+  hello_world: |
+    -- Credentials: SET longbridge_app_key / longbridge_app_secret /
+    -- longbridge_access_token, or export LONGBRIDGE_APP_KEY etc.
+    SELECT * FROM longbridge_account();
+    SELECT * FROM longbridge_positions();
+
+    -- Quotes and candlesticks need an HTTP+JSON gateway (see below)
+    SET longbridge_base_url = 'https://your-gateway.example.com';
+    SELECT * FROM longbridge_quote(['700.HK', 'AAPL.US']);
+    SELECT * FROM longbridge_history_bars('700.HK', 'day', DATE '2026-01-01', DATE '2026-06-30');
+  extended_description: |
+    Table functions over the [Longbridge OpenAPI](https://open.longbridge.com):
+    `longbridge_quote`, `longbridge_instruments`, `longbridge_bars`,
+    `longbridge_history_bars`, `longbridge_account` and `longbridge_positions`.
+
+    Credentials come from the `longbridge_app_key`, `longbridge_app_secret` and
+    `longbridge_access_token` settings, falling back to the `LONGBRIDGE_*` (or
+    legacy `LONGPORT_*`) environment variables. `longbridge_region` picks
+    `openapi.longbridge.com` (`hk`, default) or `openapi.longbridge.cn` (`cn`).
+
+    Account and position data are plain REST and work against the official host.
+    Quote, instrument and candlestick data are only served over LongPort's
+    socket protocol, so those functions need `longbridge_base_url` pointing at a
+    gateway that re-serves them as HTTP+JSON, such as the sidecar in this
+    repository's `demo/sidecar`.

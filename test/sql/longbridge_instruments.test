@@ -1,0 +1,71 @@
+# name: test/sql/longbridge_instruments.test
+# description: test the longbridge_instruments table function
+# group: [sql]
+
+# Require statement will ensure this test is run with this extension loaded
+require longbridge
+
+# Bind-time argument validation (offline, no credentials or network needed)
+
+statement error
+SELECT * FROM longbridge_instruments(NULL::VARCHAR);
+----
+must not be NULL
+
+statement error
+SELECT * FROM longbridge_instruments([]::VARCHAR[]);
+----
+at least one symbol
+
+statement error
+SELECT * FROM longbridge_instruments([NULL]::VARCHAR[]);
+----
+must not be NULL
+
+statement error
+SELECT * FROM longbridge_instruments('');
+----
+must not be empty
+
+# Without credentials, bind fails before any network I/O
+statement error
+SELECT * FROM longbridge_instruments('700.HK');
+----
+Longbridge credentials are not configured
+
+# Live assertions below need real credentials in the environment; they only check
+# result shape, never market values.
+# NOTE: as of writing, the live gateway returns 404 "api not found" for /v1/quote/static
+# (quote pull moved to the WebSocket protocol), so these blocks fail even with valid
+# credentials until the function is switched to a WSS transport.
+require-env LONGBRIDGE_ACCESS_TOKEN
+
+# Both overloads return a result set
+query T
+SELECT count(*) >= 0 FROM longbridge_instruments('700.HK');
+----
+true
+
+query T
+SELECT count(*) >= 0 FROM longbridge_instruments(['700.HK', 'AAPL.US']);
+----
+true
+
+# Result schema is fixed (14 columns)
+query TTTTTT
+DESCRIBE SELECT * FROM longbridge_instruments('700.HK');
+----
+symbol	VARCHAR	YES	NULL	NULL	NULL
+name_cn	VARCHAR	YES	NULL	NULL	NULL
+name_en	VARCHAR	YES	NULL	NULL	NULL
+name_hk	VARCHAR	YES	NULL	NULL	NULL
+exchange	VARCHAR	YES	NULL	NULL	NULL
+currency	VARCHAR	YES	NULL	NULL	NULL
+lot_size	INTEGER	YES	NULL	NULL	NULL
+total_shares	BIGINT	YES	NULL	NULL	NULL
+circulating_shares	BIGINT	YES	NULL	NULL	NULL
+eps	DOUBLE	YES	NULL	NULL	NULL
+eps_ttm	DOUBLE	YES	NULL	NULL	NULL
+bps	DOUBLE	YES	NULL	NULL	NULL
+dividend_yield	DOUBLE	YES	NULL	NULL	NULL
+board	VARCHAR	YES	NULL	NULL	NULL

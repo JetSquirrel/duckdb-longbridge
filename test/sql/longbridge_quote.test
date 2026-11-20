@@ -1,0 +1,66 @@
+# name: test/sql/longbridge_quote.test
+# description: test longbridge_quote table function
+# group: [sql]
+
+require longbridge
+
+# NULL / empty inputs are rejected at bind time (before any credentials or HTTP are needed)
+statement error
+SELECT * FROM longbridge_quote(NULL::VARCHAR);
+----
+symbol must not be NULL
+
+statement error
+SELECT * FROM longbridge_quote(['700.HK', NULL]);
+----
+must not contain NULL elements
+
+statement error
+SELECT * FROM longbridge_quote([]::VARCHAR[]);
+----
+at least one symbol
+
+# Both overloads bind with the same output schema (DESCRIBE binds without executing, so no credentials needed)
+query TTTTTT
+DESCRIBE SELECT * FROM longbridge_quote('700.HK');
+----
+symbol	VARCHAR	YES	NULL	NULL	NULL
+last_done	DOUBLE	YES	NULL	NULL	NULL
+prev_close	DOUBLE	YES	NULL	NULL	NULL
+open	DOUBLE	YES	NULL	NULL	NULL
+high	DOUBLE	YES	NULL	NULL	NULL
+low	DOUBLE	YES	NULL	NULL	NULL
+timestamp	TIMESTAMP	YES	NULL	NULL	NULL
+volume	BIGINT	YES	NULL	NULL	NULL
+turnover	DOUBLE	YES	NULL	NULL	NULL
+trade_status	INTEGER	YES	NULL	NULL	NULL
+
+query TTTTTT
+DESCRIBE SELECT * FROM longbridge_quote(['700.HK', 'AAPL.US']);
+----
+symbol	VARCHAR	YES	NULL	NULL	NULL
+last_done	DOUBLE	YES	NULL	NULL	NULL
+prev_close	DOUBLE	YES	NULL	NULL	NULL
+open	DOUBLE	YES	NULL	NULL	NULL
+high	DOUBLE	YES	NULL	NULL	NULL
+low	DOUBLE	YES	NULL	NULL	NULL
+timestamp	TIMESTAMP	YES	NULL	NULL	NULL
+volume	BIGINT	YES	NULL	NULL	NULL
+turnover	DOUBLE	YES	NULL	NULL	NULL
+trade_status	INTEGER	YES	NULL	NULL	NULL
+
+# Live assertions below require real credentials; only shapes are asserted, never market values.
+# NOTE: as of writing, the live gateway returns 404 "api not found" for /v1/quote/quote
+# (quote pull moved to the WebSocket protocol), so these blocks fail even with valid
+# credentials until the function is switched to a WSS transport.
+require-env LONGBRIDGE_ACCESS_TOKEN
+
+query I
+SELECT (count(*) >= 0)::INTEGER FROM longbridge_quote('700.HK');
+----
+1
+
+query I
+SELECT (count(*) >= 0)::INTEGER FROM longbridge_quote(['700.HK', 'AAPL.US']);
+----
+1

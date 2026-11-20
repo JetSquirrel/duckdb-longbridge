@@ -1,0 +1,25 @@
+# name: test/sql/longbridge.test
+# description: test longbridge extension
+# group: [sql]
+
+# Require statement will ensure this test is run with this extension loaded
+require longbridge
+
+# Extension options are registered by the extension
+statement ok
+SET longbridge_region = 'cn';
+
+statement ok
+SET longbridge_region = 'hk';
+
+statement ok
+SET longbridge_app_key = 'dummy';
+
+statement ok
+RESET longbridge_app_key;
+
+# Table functions are registered; without credentials the client rejects the call at bind time
+statement error
+SELECT * FROM longbridge_quote('700.HK');
+----
+Longbridge credentials are not configured
