@@ -16,7 +16,7 @@ extension:
 
 repo:
   github: JetSquirrel/duckdb-longbridge
-  ref: da093b4ccdb14ae1806ac6374e15344457761ffc
+  ref: 8c305bbce089950756e373fc5ad94896bd87a261
 
 docs:
   hello_world: |
